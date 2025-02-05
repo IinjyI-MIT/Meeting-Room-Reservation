@@ -13,10 +13,9 @@ app.use(bodyParser.json());
 // Serve static files from the "public" folder
 app.use(express.static(path.join(process.cwd(), "public")));
 
-// Path to the reservations file
+// Read reservation data from the text file
 const reservationsFilePath = path.join(process.cwd(), "reservations.txt");
 
-// Read reservation data from the text file
 const readReservations = () => {
   const data = fs.readFileSync(reservationsFilePath, "utf-8");
   const reservations = data.split("\n").map(line => {
