@@ -15,7 +15,7 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Read reservation data from the text file
 const readReservations = () => {
-  const data = fs.readFileSync("./reservations.txt", "utf-8");
+  const data = fs.readFileSync("reservations.txt", "utf-8");
   const reservations = data.split("\n").map(line => {
     const [time, info] = line.split(" : ");
     const [status, email, reason] = info.split(" ");
@@ -34,7 +34,7 @@ const writeReservations = (reservations) => {
   const data = reservations.map(reservation => {
     return `"${reservation.time}" : "${reservation.status}" "${reservation.email}" "${reservation.reason}"`;
   }).join("\n");
-  fs.writeFileSync("./reservations.txt", data, "utf-8");
+  fs.writeFileSync("reservations.txt", data, "utf-8");
 };
 
 // Endpoint to get all reservations
