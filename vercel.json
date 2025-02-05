@@ -15,5 +15,8 @@
       "src": "/(.*)",
       "dest": "/server.js"
     }
+  ],
+  "files": [
+    "reservations.txt"
   ]
 }
