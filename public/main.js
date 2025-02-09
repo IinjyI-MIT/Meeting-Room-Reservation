@@ -3,7 +3,7 @@ const markReservedSlots = (reservations) => {
   reservations.forEach((reservation) => {
     const slot = document.querySelector(`.slot[data-time="${reservation.time}"]`);
     if (slot) {
-      if (reservation.status != "f") {
+      if (reservation.state != "f") {
         slot.classList.add("reserved");
         const infoDiv = document.createElement("div");
         infoDiv.classList.add("info");
