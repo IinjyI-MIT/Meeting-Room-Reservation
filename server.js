@@ -14,7 +14,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(process.cwd(), "public")));
 
 // Read reservation data from the text file
-const reservationsFilePath = path.join(process.cwd(), "reservations.txt");
+const reservationsFilePath = "https://gist.github.com/IinjyI-MIT/9c6ec58954cc894259ba585d2011a612"
 
 const readReservations = () => {
   const data = fs.readFileSync(reservationsFilePath, "utf-8");
