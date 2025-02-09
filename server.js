@@ -15,7 +15,7 @@ app.use(express.static(path.join(process.cwd(), "public")));
 
 // GitHub Gist API URL and token
 const gistUrl = "https://api.github.com/gists/9c6ec58954cc894259ba585d2011a612";
-const gistToken = "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"; // Replace with your GitHub token
+const gistToken = "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"; // Replace with your GitHub token
 
 // Read reservation data from the Gist
 const readReservations = async () => {
