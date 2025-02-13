@@ -108,7 +108,7 @@ app.post("/reserve", async (req, res) => {
   }
 });
 
-app.post("/reset-reservations", async (req, res) => {
+app.get("/reset-reservations", async (req, res) => {
   try {
     console.log("Resetting reservations.");
     const reservations = await readReservations();
