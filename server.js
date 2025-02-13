@@ -20,6 +20,15 @@ const TURSO_AUTH_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpY
 
 const db = createClient({ url: TURSO_URL, authToken: TURSO_AUTH_TOKEN });
 
+// Function to convert 24-hour time to 12-hour format with AM/PM
+const convertTo12HourFormat = (time) => {
+  const [hour, minute] = time.split(':');
+  const hourInt = parseInt(hour, 10);
+  const period = hourInt >= 12 ? 'PM' : 'AM';
+  const hour12 = hourInt % 12 || 12;
+  return `${hour12}:${minute} ${period}`;
+};
+
 // Ensure reservations table exists and insert initial data
 async function initializeDatabase() {
   await db.execute(`
@@ -35,7 +44,7 @@ async function initializeDatabase() {
 
   // Insert data for the next seven days with times from 9 AM to 5 PM
   const today = new Date();
-  const times = Array.from({ length: 9 }, (_, i) => `${9 + i}:00`);
+  const times = Array.from({ length: 9 }, (_, i) => `${9 + i}:00`).map(convertTo12HourFormat);
 
   for (let i = 0; i < 7; i++) {
     const nextDate = new Date(today);
@@ -139,14 +148,16 @@ app.get("/api/reset-reservations", async (req, res) => {
 
     // Get the current date and calculate the next week's dates
     const today = new Date();
+    const times = Array.from({ length: 9 }, (_, i) => `${9 + i}:00`).map(convertTo12HourFormat);
+
     for (let i = 0; i < 7; i++) {
       const nextDate = new Date(today);
       nextDate.setDate(today.getDate() + i);
       const dateString = nextDate.toISOString().split('T')[0];
 
-      reservations.forEach((res) => {
+      times.forEach((time) => {
         newReservations.push({
-          time: res.time,
+          time,
           date: dateString,
           state: "f",
           email: "",
