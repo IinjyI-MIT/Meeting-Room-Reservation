@@ -1,7 +1,6 @@
 const express = require("express");
 const nodemailer = require("nodemailer");
 const bodyParser = require("body-parser");
-const cron = require("node-cron");
 const { createClient } = require("@libsql/client");
 const path = require("path");
 
@@ -14,6 +13,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
 // Replace these with your actual Turso database credentials
 const TURSO_URL = "libsql://meeting-room-reservation-iinjyi-mit.turso.io"; // Replace with your actual Turso URL
 const TURSO_AUTH_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MzkxMjg0MDMsImlkIjoiMDQ5ZjA2ZmEtODBiMC00OTk5LTk0NjEtZTA4OGUwYzVjYjZhIn0.-zkms14H4gU805AFLWqPjYzzsu2rnVGp2VZTxVf0PV0amnLzyjy4JHkdGP-G8W5kYSRKvloR2oLs-2ayhqDiAQ"; // Replace with your Turso auth token
@@ -57,7 +57,7 @@ async function writeReservations(reservations) {
 }
 
 // Get reservations
-app.get("/reservations", async (req, res) => {
+app.get("/api/reservations", async (req, res) => {
   try {
     const reservations = await readReservations();
     res.json({ reservations });
@@ -67,7 +67,7 @@ app.get("/reservations", async (req, res) => {
 });
 
 // Make a reservation
-app.post("/reserve", async (req, res) => {
+app.post("/api/reserve", async (req, res) => {
   const { email, reason, slots } = req.body;
 
   try {
@@ -108,7 +108,7 @@ app.post("/reserve", async (req, res) => {
   }
 });
 
-app.get("/reset-reservations", async (req, res) => {
+app.get("/api/reset-reservations", async (req, res) => {
   try {
     console.log("Resetting reservations.");
     const reservations = await readReservations();

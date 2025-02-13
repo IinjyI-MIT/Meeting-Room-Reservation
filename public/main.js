@@ -21,7 +21,7 @@ const markReservedSlots = (reservations) => {
 // Fetch reserved slots from the server when the page loads
 window.addEventListener("load", async () => {
   try {
-    const response = await fetch("/reservations");
+    const response = await fetch("/api/reservations");
     const data = await response.json();
     renderSchedule(data.reservations);
     markReservedSlots(data.reservations);
@@ -94,7 +94,7 @@ reservationForm.addEventListener("submit", async (e) => {
 
   // Send reservation data to the server
   try {
-    const response = await fetch("/reserve", {
+    const response = await fetch("/api/reserve", {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
