@@ -108,16 +108,20 @@ app.post("/reserve", async (req, res) => {
   }
 });
 
-// Reset reservations at midnight
-cron.schedule("0 0 * * *", async () => {
-  console.log("Resetting reservations.");
-  const reservations = await readReservations();
-  reservations.forEach((res) => {
-    res.state = "f";
-    res.email = "";
-    res.reason = "";
-  });
-  await writeReservations(reservations);
+app.post("/reset-reservations", async (req, res) => {
+  try {
+    console.log("Resetting reservations.");
+    const reservations = await readReservations();
+    reservations.forEach((res) => {
+      res.state = "f";
+      res.email = "";
+      res.reason = "";
+    });
+    await writeReservations(reservations);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error resetting reservations" });
+  }
 });
 
 // Start server
