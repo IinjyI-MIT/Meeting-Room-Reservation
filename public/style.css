@@ -7,7 +7,7 @@ body {
   align-items: center;
   min-height: 100vh;
   background: url('logo-b.png') no-repeat center center;
-  background-size: 400px 150px; /* Adjusted size for better centering */
+  background-size: 800px 200px; /* Adjusted size for better centering */
 }
 
 h1 {
@@ -21,7 +21,6 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  margin-bottom: 10px;
   width: 80%;
 }
 
@@ -43,17 +42,17 @@ h1 {
 }
 
 .slot:hover {
-  background-color: #333; /* Slightly lighter on hover */
+  background-color: rgba(51, 51, 51, 0.9); /* Slightly lighter on hover with 0.9 opacity */
   transform: scale(1.05);
 }
 
 .slot.selected {
   outline: 3px dashed #4a90e2;
-  background-color: #4a90e2; /* Blue for selected */
+  background-color: rgba(74, 144, 226, 0.9); /* Blue for selected with 0.9 opacity */
 }
 
 .slot.reserved {
-  background-color: #ff6347; /* Tomato red for reserved */
+  background-color: rgba(255, 99, 71, 0.9); /* Tomato red for reserved with 0.9 opacity */
   cursor: not-allowed;
 }
 
