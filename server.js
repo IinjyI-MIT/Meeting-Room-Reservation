@@ -20,22 +20,44 @@ const TURSO_AUTH_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpY
 
 const db = createClient({ url: TURSO_URL, authToken: TURSO_AUTH_TOKEN });
 
-// Ensure reservations table exists
+// Ensure reservations table exists and insert initial data
 async function initializeDatabase() {
   await db.execute(`
     CREATE TABLE IF NOT EXISTS reservations (
-      time TEXT PRIMARY KEY,
+      time TEXT,
+      date TEXT,
       state TEXT,
       email TEXT,
-      reason TEXT
+      reason TEXT,
+      PRIMARY KEY (time, date)
     );
   `);
+
+  // Insert data for the next seven days with times from 9 AM to 5 PM
+  const today = new Date();
+  const times = Array.from({ length: 9 }, (_, i) => `${9 + i}:00`);
+
+  for (let i = 0; i < 7; i++) {
+    const nextDate = new Date(today);
+    nextDate.setDate(today.getDate() + i);
+    const dateString = nextDate.toISOString().split('T')[0];
+
+    const reservations = times.map(time => ({
+      time,
+      date: dateString,
+      state: "f",
+      email: "",
+      reason: ""
+    }));
+
+    await writeReservations(reservations);
+  }
 }
 initializeDatabase();
 
 // Read reservations from Turso
-async function readReservations() {
-  const result = await db.execute("SELECT * FROM reservations");
+async function readReservations(date) {
+  const result = await db.execute("SELECT * FROM reservations WHERE date = ?", [date]);
   return result.rows;
 }
 
@@ -43,14 +65,14 @@ async function readReservations() {
 async function writeReservations(reservations) {
   const queries = reservations.map((res) => ({
     sql: `
-      INSERT INTO reservations (time, state, email, reason)
-      VALUES (?, ?, ?, ?)
-      ON CONFLICT(time) DO UPDATE SET 
+      INSERT INTO reservations (time, date, state, email, reason)
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(time, date) DO UPDATE SET 
         state = excluded.state,
         email = excluded.email,
         reason = excluded.reason;
     `,
-    args: [res.time, res.state, res.email, res.reason],
+    args: [res.time, res.date, res.state, res.email, res.reason],
   }));
 
   await db.batch(queries);
@@ -58,8 +80,9 @@ async function writeReservations(reservations) {
 
 // Get reservations
 app.get("/api/reservations", async (req, res) => {
+  const { date } = req.query;
   try {
-    const reservations = await readReservations();
+    const reservations = await readReservations(date);
     res.json({ reservations });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error fetching reservations" });
@@ -68,10 +91,10 @@ app.get("/api/reservations", async (req, res) => {
 
 // Make a reservation
 app.post("/api/reserve", async (req, res) => {
-  const { email, reason, slots } = req.body;
+  const { email, reason, slots, date } = req.body;
 
   try {
-    const reservations = await readReservations();
+    const reservations = await readReservations(date);
 
     slots.forEach((slotTime) => {
       const reservation = reservations.find((r) => r.time === slotTime);
@@ -99,7 +122,7 @@ app.post("/api/reserve", async (req, res) => {
       from: "reservation@measuresofteg.com",
       to: email,
       subject: "Meeting Room Reservation Confirmation",
-      text: `You have reserved the meeting room for: ${slots.join(", ")}.\nReason: ${reason}`,
+      text: `You have reserved the meeting room for: ${slots.join(", ")} on ${date}.\nReason: ${reason}`,
     });
 
     res.json({ success: true });
@@ -112,12 +135,27 @@ app.get("/api/reset-reservations", async (req, res) => {
   try {
     console.log("Resetting reservations.");
     const reservations = await readReservations();
-    reservations.forEach((res) => {
-      res.state = "f";
-      res.email = "";
-      res.reason = "";
-    });
-    await writeReservations(reservations);
+    const newReservations = [];
+
+    // Get the current date and calculate the next week's dates
+    const today = new Date();
+    for (let i = 0; i < 7; i++) {
+      const nextDate = new Date(today);
+      nextDate.setDate(today.getDate() + i);
+      const dateString = nextDate.toISOString().split('T')[0];
+
+      reservations.forEach((res) => {
+        newReservations.push({
+          time: res.time,
+          date: dateString,
+          state: "f",
+          email: "",
+          reason: "",
+        });
+      });
+    }
+
+    await writeReservations(newReservations);
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error resetting reservations" });

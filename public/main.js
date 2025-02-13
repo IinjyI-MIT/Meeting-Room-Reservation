@@ -20,14 +20,30 @@ const markReservedSlots = (reservations) => {
 
 // Fetch reserved slots from the server when the page loads
 window.addEventListener("load", async () => {
-  try {
-    const response = await fetch("/api/reservations");
-    const data = await response.json();
-    renderSchedule(data.reservations);
-    markReservedSlots(data.reservations);
-  } catch (error) {
-    console.error("Error fetching reservations:", error);
-  }
+  const dateInput = document.getElementById("dateInput");
+  const hiddenDate = document.getElementById("hiddenDate");
+  const today = new Date().toISOString().split('T')[0];
+  dateInput.value = today;
+  hiddenDate.value = today;
+
+  const fetchReservations = async (date) => {
+    try {
+      const response = await fetch(`/api/reservations?date=${date}`);
+      const data = await response.json();
+      renderSchedule(data.reservations);
+      markReservedSlots(data.reservations);
+    } catch (error) {
+      console.error("Error fetching reservations:", error);
+    }
+  };
+
+  await fetchReservations(today);
+
+  dateInput.addEventListener("change", async (e) => {
+    const selectedDate = e.target.value;
+    hiddenDate.value = selectedDate;
+    await fetchReservations(selectedDate);
+  });
 
   // Allow selection of available slots
   document.querySelectorAll(".slot").forEach((slot) => {
@@ -49,6 +65,15 @@ const renderSchedule = (reservations) => {
     slot.dataset.time = reservation.time;
     slot.textContent = reservation.time;
     scheduleDiv.appendChild(slot);
+  });
+
+  // Re-attach event listeners to the new slots
+  document.querySelectorAll(".slot").forEach((slot) => {
+    slot.addEventListener("click", () => {
+      if (!slot.classList.contains("reserved")) {
+        slot.classList.toggle("selected");
+      }
+    });
   });
 };
 
@@ -82,6 +107,7 @@ reservationForm.addEventListener("submit", async (e) => {
 
   const email = document.getElementById("email").value.trim();
   const reason = document.getElementById("reason").value.trim();
+  const date = document.getElementById("hiddenDate").value.trim();
 
   // Gather selected slots
   const selectedSlots = Array.from(document.querySelectorAll(".slot.selected"))
@@ -99,13 +125,10 @@ reservationForm.addEventListener("submit", async (e) => {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ email, reason, slots: selectedSlots })
+      body: JSON.stringify({ email, reason, slots: selectedSlots, date })
     });
 
-    const responseText = await response.text();
-    console.log("Response text:", responseText);
-
-    const data = JSON.parse(responseText);
+    const data = await response.json();
 
     if (data.success) {
       // Mark the newly reserved slots in the UI
