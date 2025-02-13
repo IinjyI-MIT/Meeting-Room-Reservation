@@ -44,15 +44,6 @@ window.addEventListener("load", async () => {
     hiddenDate.value = selectedDate;
     await fetchReservations(selectedDate);
   });
-
-  // Allow selection of available slots
-  document.querySelectorAll(".slot").forEach((slot) => {
-    slot.addEventListener("click", () => {
-      if (!slot.classList.contains("reserved")) {
-        slot.classList.toggle("selected");
-      }
-    });
-  });
 });
 
 // Function to render the schedule based on fetched reservation data

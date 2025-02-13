@@ -89,11 +89,11 @@ h1 {
 
 .modal-content {
   background-color: #1e1e1e;
-  margin: 15vh auto;
-  padding: 2vh;
+  margin: 10vh auto; /* Reduced margin for larger modal */
+  padding: 4vh; /* Increased padding for larger modal */
   border: 1px solid #888;
-  width: 80%;
-  max-width: 50vw;
+  width: 90%; /* Increased width for larger modal */
+  max-width: 60vw; /* Increased max-width for larger modal */
   border-radius: 1vh;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   color: #f0f0f0;
