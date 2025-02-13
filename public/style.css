@@ -7,13 +7,13 @@ body {
   align-items: center;
   min-height: 100vh;
   background: url('logo-b.png') no-repeat center center;
-  background-size: 800px 200px; /* Adjusted size for better centering */
+  background-size: 50vw 12.5vh; /* Adjusted size for better centering */
 }
 
 h1 {
   text-align: center;
   color: #4a90e2;
-  margin: 10px 0;
+  margin: 1vh 0;
 }
 
 /* Schedule grid styling */
@@ -25,19 +25,19 @@ h1 {
 }
 
 .slot {
-  width: 300px; /* Increased width */
-  height: 180px; /* Increased height */
-  margin: 10px;
+  width: 20vw; /* Adjusted width */
+  height: 25vh; /* Adjusted height */
+  margin: 1vh;
   background-color: rgba(14, 54, 2, 0.9); 
   border: 1px solid #333;
-  border-radius: 8px;
+  border-radius: 1vh;
   text-align: center;
   line-height: 1.5;
   cursor: pointer;
   position: relative;
   user-select: none;
   transition: background-color 0.3s, transform 0.3s;
-  padding: 10px;
+  padding: 1vh;
   box-sizing: border-box;
 }
 
@@ -47,7 +47,7 @@ h1 {
 }
 
 .slot.selected {
-  outline: 3px dashed #4a90e2;
+  outline: 0.3vh dashed #4a90e2;
   background-color: rgba(74, 144, 226, 0.9); /* Blue for selected with 0.9 opacity */
 }
 
@@ -63,13 +63,13 @@ h1 {
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.7);
-  border-radius: 8px;
+  border-radius: 1vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  font-size: 12px;
-  padding: 5px;
+  font-size: 1.2vh;
+  padding: 0.5vh;
   box-sizing: border-box;
   color: #f0f0f0;
 }
@@ -89,12 +89,12 @@ h1 {
 
 .modal-content {
   background-color: #1e1e1e;
-  margin: 15% auto;
-  padding: 20px;
+  margin: 15vh auto;
+  padding: 2vh;
   border: 1px solid #888;
   width: 80%;
-  max-width: 500px;
-  border-radius: 8px;
+  max-width: 50vw;
+  border-radius: 1vh;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   color: #f0f0f0;
 }
@@ -102,7 +102,7 @@ h1 {
 .close {
   color: #aaa;
   float: right;
-  font-size: 28px;
+  font-size: 2.8vh;
   font-weight: bold;
 }
 
@@ -117,14 +117,14 @@ button {
   background-color: #4a90e2;
   color: white;
   border: none;
-  padding: 10px 20px;
+  padding: 1vh 2vw;
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
+  font-size: 1.6vh;
+  margin: 0.4vh 0.2vw;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 1vh;
   transition: background-color 0.3s;
 }
 
@@ -135,11 +135,11 @@ button:hover {
 input[type="email"],
 textarea {
   width: 100%;
-  padding: 10px;
-  margin: 8px 0;
+  padding: 1vh;
+  margin: 0.8vh 0;
   display: inline-block;
   border: 1px solid #ccc;
-  border-radius: 4px;
+  border-radius: 0.4vh;
   box-sizing: border-box;
   background-color: #333;
   color: #f0f0f0;
@@ -147,4 +147,61 @@ textarea {
 
 textarea {
   resize: vertical;
+}
+
+/* Responsive styles */
+@media (max-width: 1200px) {
+  #schedule {
+    width: 90%;
+  }
+
+  .slot {
+    width: 25vw;
+    height: 20vh;
+  }
+
+  .modal-content {
+    width: 90%;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    background-size: 40vw 10vh;
+  }
+
+  .slot {
+    width: 30vw;
+    height: 15vh;
+  }
+
+  .modal-content {
+    width: 95%;
+  }
+
+  button {
+    padding: 0.8vh 1.6vw;
+    font-size: 1.4vh;
+  }
+}
+
+@media (max-width: 480px) {
+  body {
+    background-size: 30vw 7.5vh;
+  }
+
+  .slot {
+    width: 35vw;
+    height: 12.5vh;
+  }
+
+  .modal-content {
+    width: 100%;
+    margin: 10vh auto;
+  }
+
+  button {
+    padding: 0.6vh 1.2vw;
+    font-size: 1.2vh;
+  }
 }
