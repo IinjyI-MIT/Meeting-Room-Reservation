@@ -42,24 +42,30 @@ async function initializeDatabase() {
     );
   `);
 
-  // Insert data for the next seven days with times from 9 AM to 5 PM
-  const today = new Date();
-  const times = Array.from({ length: 9 }, (_, i) => `${9 + i}:00`).map(convertTo12HourFormat);
+  // Check if the reservations table is empty
+  const result = await db.execute("SELECT COUNT(*) as count FROM reservations");
+  const count = result.rows[0].count;
 
-  for (let i = 0; i < 7; i++) {
-    const nextDate = new Date(today);
-    nextDate.setDate(today.getDate() + i);
-    const dateString = nextDate.toISOString().split('T')[0];
+  // If the table is empty, insert data for the next seven days with times from 9 AM to 5 PM
+  if (count === 0) {
+    const today = new Date();
+    const times = Array.from({ length: 9 }, (_, i) => `${9 + i}:00`).map(convertTo12HourFormat);
 
-    const reservations = times.map(time => ({
-      time,
-      date: dateString,
-      state: "f",
-      email: "",
-      reason: ""
-    }));
+    for (let i = 0; i < 7; i++) {
+      const nextDate = new Date(today);
+      nextDate.setDate(today.getDate() + i);
+      const dateString = nextDate.toISOString().split('T')[0];
 
-    await writeReservations(reservations);
+      const reservations = times.map(time => ({
+        time,
+        date: dateString,
+        state: "f",
+        email: "",
+        reason: ""
+      }));
+
+      await writeReservations(reservations);
+    }
   }
 }
 initializeDatabase();
