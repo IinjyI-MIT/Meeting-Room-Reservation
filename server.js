@@ -15,7 +15,7 @@ app.get("/", (req, res) => {
 });
 
 // Replace these with your actual Turso database credentials
-const TURSO_URL = "libsql://meeting-room-reservation-iinjyi-mit.turso.io"; // Replace with your actual Turso URL
+const TURSO_URL = "libsql://meeting-room-reservation-iinjyi-mit.turso.io"; // Replace with your Turso URL
 const TURSO_AUTH_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MzkxMjg0MDMsImlkIjoiMDQ5ZjA2ZmEtODBiMC00OTk5LTk0NjEtZTA4OGUwYzVjYjZhIn0.-zkms14H4gU805AFLWqPjYzzsu2rnVGp2VZTxVf0PV0amnLzyjy4JHkdGP-G8W5kYSRKvloR2oLs-2ayhqDiAQ"; // Replace with your Turso auth token
 
 const db = createClient({ url: TURSO_URL, authToken: TURSO_AUTH_TOKEN });
@@ -66,7 +66,12 @@ initializeDatabase();
 
 // Read reservations from Turso
 async function readReservations(date) {
-  const result = await db.execute("SELECT * FROM reservations WHERE date = ?", [date]);
+  let result;
+  if (date) {
+    result = await db.execute("SELECT * FROM reservations WHERE date = ?", [date]);
+  } else {
+    result = await db.execute("SELECT * FROM reservations");
+  }
   return result.rows;
 }
 
@@ -169,6 +174,7 @@ app.get("/api/reset-reservations", async (req, res) => {
     await writeReservations(newReservations);
     res.json({ success: true });
   } catch (error) {
+    console.error("Error resetting reservations:", error);
     res.status(500).json({ success: false, message: "Error resetting reservations" });
   }
 });
