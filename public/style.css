@@ -1,19 +1,25 @@
 body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #121212; 
-  color: #f0f0f0;
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #0d1117; 
+  color: #f8fafc;
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
   background: url('logo-b.png') no-repeat center center;
-  background-size: 50vw 12.5vh; /* Adjusted size for better centering */
+  background-size: 45vw auto;
+  margin: 0;
+  padding: 2vh 0;
+  transition: background-color 0.3s ease;
 }
 
 h1 {
   text-align: center;
-  color: #4a90e2;
-  margin: 1vh 0;
+  color: #60a5fa;
+  margin: 2vh 0;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 /* Schedule grid styling */
@@ -21,39 +27,70 @@ h1 {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  width: 80%;
+  width: 85%;
+  gap: 1.5vh;
+  margin-top: 2vh;
 }
 
 .slot {
-  width: 20vw; /* Adjusted width */
-  height: 25vh; /* Adjusted height */
-  margin: 1vh;
-  background-color: rgba(14, 54, 2, 0.9); 
-  border: 1px solid #333;
-  border-radius: 1vh;
+  width: 20vw;
+  height: 25vh;
+  background-color: rgba(15, 23, 42, 0.85);
+  border: 1px solid #334155;
+  border-radius: 0.8rem;
   text-align: center;
-  line-height: 1.5;
+  line-height: 1.6;
   cursor: pointer;
   position: relative;
   user-select: none;
-  transition: background-color 0.3s, transform 0.3s;
-  padding: 1vh;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 1.5vh;
   box-sizing: border-box;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(5px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 .slot:hover {
-  background-color: rgba(51, 51, 51, 0.9); /* Slightly lighter on hover with 0.9 opacity */
-  transform: scale(1.05);
+  background-color: rgba(30, 41, 59, 0.9);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
 }
 
 .slot.selected {
-  outline: 0.3vh dashed #4a90e2;
-  background-color: rgba(74, 144, 226, 0.9); /* Blue for selected with 0.9 opacity */
+  outline: none;
+  border: 2px solid #60a5fa;
+  background-color: #092b63;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3);
 }
 
 .slot.reserved {
-  background-color: rgba(255, 99, 71, 0.9); /* Tomato red for reserved with 0.9 opacity */
+  background-color: rgba(220, 38, 38, 0.8); /* Brighter red for reserved slots */
+  border-color: #ef4444;
   cursor: not-allowed;
+  color: #ffffff;
+}
+
+/* Time display for reserved slots */
+.slot.reserved:before {
+  content: attr(data-time);
+  display: block;
+  font-size: 2vh;
+  font-weight: 600;
+  margin-bottom: 1vh;
+  color: #ffffff;
+}
+
+.slot.reserved:after {
+  content: "Reserved";
+  display: block;
+  font-size: 1.6vh;
+  font-weight: 500;
+  margin-top: 1vh;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .slot .info {
@@ -62,97 +99,179 @@ h1 {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  border-radius: 1vh;
+  background-color: rgba(15, 23, 42, 0.85);
+  border-radius: 0.8rem;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   font-size: 1.2vh;
-  padding: 0.5vh;
+  padding: 1vh;
   box-sizing: border-box;
-  color: #f0f0f0;
+  color: #f8fafc;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.slot:hover .info {
+  opacity: 1;
+}
+
+/* Calendar input styling */
+.calender-select {
+  background-color: #1e293b;
+  color: #f8fafc;
+  border: 1px solid #475569;
+  border-radius: 0.6rem;
+  padding: 1.2vh 1.5vw;
+  font-size: 1.6vh;
+  cursor: pointer;
+  margin: 1.5vh 0;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-family: inherit;
+  max-width: 100%;
+}
+
+.calender-select:hover {
+  border-color: #60a5fa;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.calender-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+}
+
+/* Overriding browser default calendar styling */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.7;
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 /* Modal styling */
 .modal {
   display: none;
   position: fixed;
-  z-index: 1;
+  z-index: 10;
   left: 0;
   top: 0;
   width: 100%;
   height: 100%;
   overflow: auto;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(5px);
+  transition: opacity 0.3s ease;
 }
 
 .modal-content {
-  background-color: #1e1e1e;
-  margin: 10vh auto; /* Reduced margin for larger modal */
-  padding: 4vh; /* Increased padding for larger modal */
-  border: 1px solid #888;
-  width: 90%; /* Increased width for larger modal */
-  max-width: 60vw; /* Increased max-width for larger modal */
-  border-radius: 1vh;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  color: #f0f0f0;
+  background-color: #1e293b;
+  margin: 8vh auto;
+  padding: 4vh;
+  border: none;
+  width: 90%;
+  max-width: 55vw;
+  border-radius: 1rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  color: #f8fafc;
+  transform: translateY(0);
+  transition: transform 0.3s ease;
+  animation: modalFadeIn 0.4s;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .close {
-  color: #aaa;
+  color: #94a3b8;
   float: right;
   font-size: 2.8vh;
   font-weight: bold;
+  transition: color 0.2s ease;
 }
 
 .close:hover,
 .close:focus {
-  color: #fff;
+  color: #f8fafc;
   text-decoration: none;
   cursor: pointer;
 }
 
 button {
-  background-color: #4a90e2;
+  background-color: #3b82f6;
   color: white;
   border: none;
-  padding: 1vh 2vw;
+  padding: 1.2vh 2.2vw;
   text-align: center;
   text-decoration: none;
   display: inline-block;
   font-size: 1.6vh;
-  margin: 0.4vh 0.2vw;
+  margin: 1vh 0.3vw;
   cursor: pointer;
-  border-radius: 1vh;
-  transition: background-color 0.3s;
+  border-radius: 0.6rem;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
 }
 
 button:hover {
-  background-color: #357ab8;
+  background-color: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 7px 10px rgba(59, 130, 246, 0.3);
+}
+
+button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 3px rgba(59, 130, 246, 0.2);
 }
 
 input[type="email"],
 textarea {
   width: 100%;
-  padding: 1vh;
-  margin: 0.8vh 0;
+  padding: 1.5vh;
+  margin: 1vh 0;
   display: inline-block;
-  border: 1px solid #ccc;
-  border-radius: 0.4vh;
+  border: 1px solid #475569;
+  border-radius: 0.6rem;
   box-sizing: border-box;
-  background-color: #333;
-  color: #f0f0f0;
+  background-color: #334155;
+  color: #f8fafc;
+  transition: all 0.3s ease;
+  font-size: 1.6vh;
+}
+
+input[type="email"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.2);
+  background-color: #1e293b;
 }
 
 textarea {
   resize: vertical;
+  min-height: 15vh;
 }
 
 /* Responsive styles */
 @media (max-width: 1200px) {
   #schedule {
-    width: 90%;
+    width: 92%;
+    gap: 1.2vh;
   }
 
   .slot {
@@ -161,47 +280,103 @@ textarea {
   }
 
   .modal-content {
-    width: 90%;
+    width: 85%;
+    max-width: 75vw;
   }
 }
 
 @media (max-width: 768px) {
   body {
-    background-size: 40vw 10vh;
+    background-size: 50vw auto;
+    background-position: center center;
+  }
+
+  #schedule {
+    width: 95%;
+    gap: 1vh;
   }
 
   .slot {
     width: 30vw;
-    height: 15vh;
+    height: 16vh;
+    padding: 1vh;
+  }
+
+  .slot.reserved:before {
+    font-size: 1.8vh;
+  }
+
+  .slot.reserved:after {
+    font-size: 1.4vh;
   }
 
   .modal-content {
-    width: 95%;
+    width: 92%;
+    max-width: 85vw;
+    padding: 3vh;
   }
 
   button {
-    padding: 0.8vh 1.6vw;
-    font-size: 1.4vh;
+    padding: 1vh 2vw;
+    font-size: 1.5vh;
+    border-radius: 0.5rem;
+  }
+  
+  .calender-select {
+    padding: 1vh 2vw;
+    font-size: 1.5vh;
   }
 }
 
 @media (max-width: 480px) {
   body {
-    background-size: 30vw 7.5vh;
+    background-size: 60vw auto;
+    background-position: center center;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  #schedule {
+    width: 98%;
+    gap: 0.8vh;
   }
 
   .slot {
-    width: 35vw;
-    height: 12.5vh;
+    width: 40vw;
+    height: 14vh;
+    padding: 0.8vh;
+    border-radius: 0.6rem;
+  }
+
+  .slot.reserved:before {
+    font-size: 1.6vh;
+    margin-bottom: 0.5vh;
+  }
+
+  .slot.reserved:after {
+    font-size: 1.2vh;
+    margin-top: 0.5vh;
   }
 
   .modal-content {
-    width: 100%;
-    margin: 10vh auto;
+    width: 95%;
+    max-width: 95vw;
+    margin: 5vh auto;
+    padding: 2.5vh;
   }
 
   button {
-    padding: 0.6vh 1.2vw;
-    font-size: 1.2vh;
+    padding: 1vh 3vw;
+    font-size: 1.4vh;
+    width: 100%;
+    margin: 0.8vh 0;
+  }
+  
+  .calender-select {
+    padding: 0.8vh 2.5vw;
+    font-size: 1.4vh;
+    width: 90%;
   }
 }
