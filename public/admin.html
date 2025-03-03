@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meeting Room Reservation Admin</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 0;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+    .container {
+      width: 80%;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+    header {
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      padding: 1rem;
+    }
+    h1 {
+      margin: 0;
+    }
+    .pending-reservations {
+      margin-top: 2rem;
+    }
+    .reservation-card {
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1rem;
+      padding: 1rem;
+    }
+    .reservation-card h3 {
+      margin-top: 0;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+    .reservation-details {
+      margin-bottom: 1rem;
+    }
+    .reservation-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .approve-btn {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .reject-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.4);
+    }
+    .modal-content {
+      background-color: #fefefe;
+      margin: 15% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 50%;
+      border-radius: 5px;
+    }
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+    }
+    .no-reservations {
+      text-align: center;
+      padding: 2rem;
+      background-color: #fff;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Meeting Room Reservation Admin</h1>
+  </header>
+
+  <div class="container">
+    <div class="pending-reservations">
+      <h2>Pending Reservations</h2>
+      <div id="pendingList"></div>
+    </div>
+  </div>
+
+  <!-- Rejection Modal -->
+  <div id="rejectionModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>Provide Rejection Reason</h3>
+      <form id="rejectionForm">
+        <input type="hidden" id="rejectionDate">
+        <input type="hidden" id="rejectionTime">
+        <input type="hidden" id="rejectionEmail">
+        
+        <div>
+          <label for="rejectionReason">Reason for rejection:</label>
+          <textarea id="rejectionReason" rows="4" style="width: 100%; margin-top: 0.5rem;" required></textarea>
+        </div>
+        
+        <div style="margin-top: 1rem; text-align: right;">
+          <button type="submit" class="reject-btn">Confirm Rejection</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Fetch pending reservations on page load
+    window.addEventListener('load', fetchPendingReservations);
+
+    async function fetchPendingReservations() {
+      try {
+        const response = await fetch('/api/pending-reservations');
+        const data = await response.json();
+        
+        const pendingList = document.getElementById('pendingList');
+        
+        if (data.reservations.length === 0) {
+          pendingList.innerHTML = '<div class="no-reservations">No pending reservations.</div>';
+          return;
+        }
+        
+        // Group reservations by email and date
+        const groupedReservations = {};
+        
+        data.reservations.forEach(reservation => {
+          const key = `${reservation.email}-${reservation.date}`;
+          if (!groupedReservations[key]) {
+            groupedReservations[key] = {
+              email: reservation.email,
+              date: reservation.date,
+              reason: reservation.reason,
+              slots: []
+            };
+          }
+          
+          groupedReservations[key].slots.push({
+            time: reservation.time,
+            date: reservation.date
+          });
+        });
+        
+        let html = '';
+        
+        // Create cards for each grouped reservation
+        Object.values(groupedReservations).forEach(group => {
+          html += `
+            <div class="reservation-card">
+              <h3>Reservation for ${group.date}</h3>
+              <div class="reservation-details">
+                <p><strong>Email:</strong> ${group.email}</p>
+                <p><strong>Reason:</strong> ${group.reason}</p>
+                <p><strong>Requested Times:</strong></p>
+                <ul>
+                  ${group.slots.map(slot => `
+                    <li>
+                      ${slot.time}
+                      <div class="reservation-actions">
+                        <button class="approve-btn" 
+                          onclick="approveReservation('${slot.date}', '${slot.time}', '${group.email}')">
+                          Approve
+                        </button>
+                        <button class="reject-btn" 
+                          onclick="showRejectionModal('${slot.date}', '${slot.time}', '${group.email}')">
+                          Reject
+                        </button>
+                      </div>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            </div>
+          `;
+        });
+        
+        pendingList.innerHTML = html;
+      } catch (error) {
+        console.error('Error fetching pending reservations:', error);
+      }
+    }
+
+    // Function to approve a reservation
+    async function approveReservation(date, time, email) {
+      try {
+        const response = await fetch('/api/admin/approve-reservation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ date, time, email })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          alert(`Reservation for ${time} on ${date} has been approved.`);
+          fetchPendingReservations(); // Refresh the list
+        } else {
+          alert('Error approving reservation. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error approving reservation:', error);
+        alert('Error approving reservation: ' + error.message);
+      }
+    }
+
+    // Show rejection modal
+    function showRejectionModal(date, time, email) {
+      const modal = document.getElementById('rejectionModal');
+      document.getElementById('rejectionDate').value = date;
+      document.getElementById('rejectionTime').value = time;
+      document.getElementById('rejectionEmail').value = email;
+      
+      modal.style.display = 'block';
+    }
+
+    // Close modal when clicking the X
+    document.querySelector('.modal .close').addEventListener('click', () => {
+      document.getElementById('rejectionModal').style.display = 'none';
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', (event) => {
+      const modal = document.getElementById('rejectionModal');
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+
+    // Handle rejection form submission
+    document.getElementById('rejectionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const date = document.getElementById('rejectionDate').value;
+      const time = document.getElementById('rejectionTime').value;
+      const email = document.getElementById('rejectionEmail').value;
+      const rejectionReason = document.getElementById('rejectionReason').value;
+      
+      try {
+        const response = await fetch('/api/admin/reject-reservation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ date, time, email, rejectionReason })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          alert(`Reservation for ${time} on ${date} has been rejected.`);
+          document.getElementById('rejectionModal').style.display = 'none';
+          document.getElementById('rejectionForm').reset();
+          fetchPendingReservations(); // Refresh the list
+        } else {
+          alert('Error rejecting reservation. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error rejecting reservation:', error);
+        alert('Error rejecting reservation: ' + error.message);
+      }
+    });
+  </script>
+</body>
+</html>

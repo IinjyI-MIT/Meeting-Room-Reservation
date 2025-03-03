@@ -14,6 +14,39 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
+// Simple middleware for basic auth protection
+function adminAuthMiddleware(req, res, next) {
+  // This is a very basic implementation - you should use more secure methods in production
+  const AUTH_USERNAME = "admin";
+  const AUTH_PASSWORD = "admin123"; // Change this to your preferred password
+
+  // Check if Authorization header exists
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    res.setHeader('WWW-Authenticate', 'Basic realm="Admin Access"');
+    return res.status(401).send('Authentication required');
+  }
+  
+  // Parse the Authorization header
+  const auth = Buffer.from(authHeader.split(' ')[1], 'base64').toString().split(':');
+  const username = auth[0];
+  const password = auth[1];
+  
+  // Check if credentials match
+  if (username === AUTH_USERNAME && password === AUTH_PASSWORD) {
+    next();
+  } else {
+    res.setHeader('WWW-Authenticate', 'Basic realm="Admin Access"');
+    return res.status(401).send('Invalid credentials');
+  }
+}
+
+// Serve admin page
+app.get("/admin", adminAuthMiddleware, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "admin.html"));
+});
+
 // Replace these with your actual Turso database credentials
 const TURSO_URL = "libsql://meeting-room-reservation-iinjyi-mit.turso.io"; // Replace with your Turso URL
 const TURSO_AUTH_TOKEN = "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3MzkxMjg0MDMsImlkIjoiMDQ5ZjA2ZmEtODBiMC00OTk5LTk0NjEtZTA4OGUwYzVjYjZhIn0.-zkms14H4gU805AFLWqPjYzzsu2rnVGp2VZTxVf0PV0amnLzyjy4JHkdGP-G8W5kYSRKvloR2oLs-2ayhqDiAQ"; // Replace with your Turso auth token
@@ -109,7 +142,17 @@ app.get("/api/reservations", async (req, res) => {
   }
 });
 
-// Make a reservation
+// Get pending reservations for admin
+app.get("/api/pending-reservations", adminAuthMiddleware, async (req, res) => {
+  try {
+    const result = await db.execute("SELECT * FROM reservations WHERE state = 'p' ORDER BY date, time");
+    res.json({ reservations: result.rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching pending reservations" });
+  }
+});
+
+// Make a reservation - now sets state to pending ("p") instead of reserved ("r")
 app.post("/api/reserve", async (req, res) => {
   const { email, reason, slots, date } = req.body;
 
@@ -119,7 +162,8 @@ app.post("/api/reserve", async (req, res) => {
     slots.forEach((slotTime) => {
       const reservation = reservations.find((r) => r.time === slotTime);
       if (reservation) {
-        reservation.state = "r";
+        // Set to pending state instead of reserved
+        reservation.state = "p";
         reservation.email = email;
         reservation.reason = reason;
       }
@@ -127,7 +171,7 @@ app.post("/api/reserve", async (req, res) => {
 
     await writeReservations(reservations);
 
-    // Send email confirmation
+    // Send email notification to user that their reservation is pending approval
     let transporter = nodemailer.createTransport({
       host: "mail.measuresofteg.com",
       port: 465,
@@ -141,13 +185,93 @@ app.post("/api/reserve", async (req, res) => {
     transporter.sendMail({
       from: "reservation@measuresofteg.com",
       to: email,
-      subject: "Meeting Room Reservation Confirmation",
-      text: `You have reserved the meeting room for: ${slots.join(", ")} on ${date}.\nReason: ${reason}`,
+      subject: "Meeting Room Reservation Pending Approval",
+      text: `Your reservation request for: ${slots.join(", ")} on ${date} is pending administrative approval.\nReason: ${reason}\n\nYou will receive another email once your reservation has been reviewed.`,
+    });
+
+    // Notify admin by email about the pending reservation
+    transporter.sendMail({
+      from: "reservation@measuresofteg.com",
+      to: "admin@measuresofteg.com", // Replace with actual admin email
+      subject: "New Pending Meeting Room Reservation",
+      text: `A new reservation request requires your approval:\n\nUser: ${email}\nDate: ${date}\nSlots: ${slots.join(", ")}\nReason: ${reason}\n\nPlease log in to the admin panel to approve or reject this request.`,
+    });
+
+    res.json({ success: true, message: "Reservation request submitted and pending approval" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error processing reservation" });
+  }
+});
+
+// New endpoint for admin to approve a reservation
+app.post("/api/admin/approve-reservation", adminAuthMiddleware, async (req, res) => {
+  const { date, time, email } = req.body;
+
+  try {
+    // Update the reservation status to "r" (reserved)
+    await db.execute(
+      "UPDATE reservations SET state = 'r' WHERE date = ? AND time = ?",
+      [date, time]
+    );
+
+    // Send confirmation email to the user
+    let transporter = nodemailer.createTransport({
+      host: "mail.measuresofteg.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: "reservation@measuresofteg.com",
+        pass: "Rre$erv@t!0nmos",
+      },
+    });
+
+    transporter.sendMail({
+      from: "reservation@measuresofteg.com",
+      to: email,
+      subject: "Meeting Room Reservation Approved",
+      text: `Your reservation for ${time} on ${date} has been approved.`,
     });
 
     res.json({ success: true });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Error processing reservation" });
+    console.error("Error approving reservation:", error);
+    res.status(500).json({ success: false, message: "Error approving reservation" });
+  }
+});
+
+// New endpoint for admin to reject a reservation
+app.post("/api/admin/reject-reservation", adminAuthMiddleware, async (req, res) => {
+  const { date, time, email, rejectionReason } = req.body;
+
+  try {
+    // Update the reservation status back to "f" (free)
+    await db.execute(
+      "UPDATE reservations SET state = 'f', email = '', reason = '' WHERE date = ? AND time = ?",
+      [date, time]
+    );
+
+    // Send rejection email to the user
+    let transporter = nodemailer.createTransport({
+      host: "mail.measuresofteg.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: "reservation@measuresofteg.com",
+        pass: "Rre$erv@t!0nmos",
+      },
+    });
+
+    transporter.sendMail({
+      from: "reservation@measuresofteg.com",
+      to: email,
+      subject: "Meeting Room Reservation Rejected",
+      text: `Your reservation for ${time} on ${date} has been rejected.\nReason: ${rejectionReason || 'No reason provided.'}`,
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error rejecting reservation:", error);
+    res.status(500).json({ success: false, message: "Error rejecting reservation" });
   }
 });
 

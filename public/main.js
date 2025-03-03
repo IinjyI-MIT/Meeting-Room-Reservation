@@ -3,15 +3,28 @@ const markReservedSlots = (reservations) => {
   reservations.forEach((reservation) => {
     const slot = document.querySelector(`.slot[data-time="${reservation.time}"]`);
     if (slot) {
-      if (reservation.state != "f") {
+      if (reservation.state === "r") {
+        // Reserved
         slot.classList.add("reserved");
+        slot.classList.remove("pending");
         const infoDiv = document.createElement("div");
         infoDiv.classList.add("info");
         infoDiv.innerHTML = `<strong>Reserved by:</strong><br>${reservation.email}<br><strong>Reason:</strong><br>${reservation.reason}`;
         slot.innerHTML = "";
         slot.appendChild(infoDiv);
-      } else {
+      } else if (reservation.state === "p") {
+        // Pending
+        slot.classList.add("pending");
         slot.classList.remove("reserved");
+        const infoDiv = document.createElement("div");
+        infoDiv.classList.add("info");
+        infoDiv.innerHTML = `<strong>Pending approval</strong><br>${reservation.email}<br><strong>Reason:</strong><br>${reservation.reason}`;
+        slot.innerHTML = "";
+        slot.appendChild(infoDiv);
+      } else {
+        // Free
+        slot.classList.remove("reserved");
+        slot.classList.remove("pending");
         slot.innerHTML = reservation.time;
       }
     }
@@ -61,7 +74,7 @@ const renderSchedule = (reservations) => {
   // Re-attach event listeners to the new slots
   document.querySelectorAll(".slot").forEach((slot) => {
     slot.addEventListener("click", () => {
-      if (!slot.classList.contains("reserved")) {
+      if (!slot.classList.contains("reserved") && !slot.classList.contains("pending")) {
         slot.classList.toggle("selected");
       }
     });
@@ -122,17 +135,17 @@ reservationForm.addEventListener("submit", async (e) => {
     const data = await response.json();
 
     if (data.success) {
-      // Mark the newly reserved slots in the UI
+      // Mark the newly reserved slots in the UI as pending
       document.querySelectorAll(".slot.selected").forEach((slot) => {
         slot.classList.remove("selected");
-        slot.classList.add("reserved");
+        slot.classList.add("pending"); // Changed from "reserved" to "pending"
         const infoDiv = document.createElement("div");
         infoDiv.classList.add("info");
-        infoDiv.innerHTML = `<strong>Reserved by:</strong><br>${email}<br><strong>Reason:</strong><br>${reason}`;
+        infoDiv.innerHTML = `<strong>Pending approval</strong><br>${email}<br><strong>Reason:</strong><br>${reason}`;
         slot.innerHTML = "";
         slot.appendChild(infoDiv);
       });
-      alert("Reservation confirmed! A confirmation email has been sent.");
+      alert("Reservation request submitted! You will receive an email when it's approved.");
     } else {
       alert("There was an error processing your reservation. Please try again.");
     }
