@@ -7,7 +7,7 @@ const path = require("path");
 const app = express();
 app.use(bodyParser.json());
 // Serve static files from the 'public' directory
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public"), { extensions: ['html'] }));
 
 // Serve index.html explicitly for the root path
 app.get("/", (req, res) => {
@@ -44,7 +44,7 @@ function adminAuthMiddleware(req, res, next) {
 
 // Serve admin page
 app.get("/admin", adminAuthMiddleware, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "admin.html"));
+  res.sendFile(path.join(__dirname, "public", "admin", "index.html"));
 });
 
 // Replace these with your actual Turso database credentials
