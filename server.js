@@ -181,14 +181,48 @@ app.post("/api/reserve", async (req, res) => {
         pass: "Rre$erv@t!0nmos",
       },
     });
-
-    transporter.sendMail({
-      from: "reservation@measuresofteg.com",
-      to: email,
-      subject: "Meeting Room Reservation Pending Approval",
-      text: `Your reservation request for: ${slots.join(", ")} on ${date} is pending administrative approval.\nReason: ${reason}\n\nYou will receive another email once your reservation has been reviewed.`,
-    });
-
+    try {
+      await new Promise((resolve, reject) => {
+        transporter.sendMail({
+          from: "reservation@measuresofteg.com",
+          to: email,
+          subject: "Meeting Room Reservation Pending Approval",
+          text: `Your reservation request for: ${slots.join(", ")} on ${date} is pending administrative approval.\nReason: ${reason}\n\nYou will receive another email once your reservation has been reviewed.`,
+        }, (error, info) => {
+          if (error) {
+            console.error('Email send error:', error);
+            reject(error);
+          } else {
+            console.log('Email sent:', info.response);
+            resolve(info);
+          }
+        });
+      });
+    } catch (emailError) {
+      console.error('Failed to send email:', emailError);
+      // Optionally, you can still return a successful reservation response
+    }
+    try {
+      await new Promise((resolve, reject) => {
+        transporter.sendMail({
+          from: "reservation@measuresofteg.com",
+          to: "hr@measuresofteg.com", 
+          subject: "New Pending Meeting Room Reservation",
+          text: `A new reservation request requires your approval:\n\nUser: ${email}\nDate: ${date}\nSlots: ${slots.join(", ")}\nReason: ${reason}\n\nPlease log in to the admin panel to approve or reject this request.`,
+        }, (error, info) => {
+          if (error) {
+            console.error('Email send error:', error);
+            reject(error);
+          } else {
+            console.log('Email sent:', info.response);
+            resolve(info);
+          }
+        });
+      });
+    } catch (emailError) {
+      console.error('Failed to send email:', emailError);
+      // Optionally, you can still return a successful reservation response
+    }
     // Notify admin by email about the pending reservation
     transporter.sendMail({
       from: "reservation@measuresofteg.com",
@@ -225,12 +259,27 @@ app.post("/api/admin/approve-reservation", async (req, res) => {
       },
     });
 
-    transporter.sendMail({
-      from: "reservation@measuresofteg.com",
-      to: email,
-      subject: "Meeting Room Reservation Approved",
-      text: `Your reservation for ${time} on ${date} has been approved.`,
-    });
+    try {
+      await new Promise((resolve, reject) => {
+        transporter.sendMail({
+          from: "reservation@measuresofteg.com",
+          to: email,
+          subject: "Meeting Room Reservation Approved",
+          text: `Your reservation for ${time} on ${date} has been approved.`
+        }, (error, info) => {
+          if (error) {
+            console.error('Email send error:', error);
+            reject(error);
+          } else {
+            console.log('Email sent:', info.response);
+            resolve(info);
+          }
+        });
+      });
+    } catch (emailError) {
+      console.error('Failed to send email:', emailError);
+      // Optionally, you can still return a successful reservation response
+    }
 
     res.json({ success: true });
   } catch (error) {
@@ -260,13 +309,27 @@ app.post("/api/admin/reject-reservation", async (req, res) => {
         pass: "Rre$erv@t!0nmos",
       },
     });
-
-    transporter.sendMail({
-      from: "reservation@measuresofteg.com",
-      to: email,
-      subject: "Meeting Room Reservation Rejected",
-      text: `Your reservation for ${time} on ${date} has been rejected.\nReason: ${rejectionReason || 'No reason provided.'}`,
-    });
+    try {
+      await new Promise((resolve, reject) => {
+        transporter.sendMail({
+          from: "reservation@measuresofteg.com",
+          to: email,
+          subject: "Meeting Room Reservation Rejected",
+          text: `Your reservation for ${time} on ${date} has been rejected.\nReason: ${rejectionReason || 'No reason provided.'}`
+        }, (error, info) => {
+          if (error) {
+            console.error('Email send error:', error);
+            reject(error);
+          } else {
+            console.log('Email sent:', info.response);
+            resolve(info);
+          }
+        });
+      });
+    } catch (emailError) {
+      console.error('Failed to send email:', emailError);
+      // Optionally, you can still return a successful reservation response
+    }
 
     res.json({ success: true });
   } catch (error) {
