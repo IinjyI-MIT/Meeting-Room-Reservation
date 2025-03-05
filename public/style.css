@@ -1,159 +1,217 @@
+:root {
+  --primary-color: #60a5fa;
+  --secondary-color: #3b82f6;
+  --background-dark: #0d1117;
+  --card-background: #1e293b;
+  --text-light: #f8fafc;
+  --text-muted: #94a3b8;
+}
+
 body {
   font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #0d1117; 
-  color: #f8fafc;
+  background-color: var(--background-dark);
+  color: var(--text-light);
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
-  background: url('logo-b.png') no-repeat center center;
-  background-size: 45vw auto;
   margin: 0;
   padding: 2vh 0;
-  transition: background-color 0.3s ease;
+  background: 
+    linear-gradient(45deg, rgba(96, 165, 250, 0.05) 0%, transparent 50%, rgba(59, 130, 246, 0.05) 100%),
+    var(--background-dark);
 }
 
-h1 {
-  text-align: center;
-  color: #60a5fa;
-  margin: 2vh 0;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Schedule grid styling */
-#schedule {
+.page-header {
+  width: 90%;
+  max-width: 1200px;
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  width: 85%;
-  gap: 1.5vh;
-  margin-top: 2vh;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 3vh;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  color: var(--primary-color);
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.date-selector {
+  display: flex;
+  align-items: center;
+  gap: 1vw;
+}
+
+.calender-select {
+  background-color: var(--card-background);
+  color: var(--text-light);
+  border: 1px solid rgba(99, 179, 237, 0.2);
+  border-radius: 0.8rem;
+  padding: 1vh 1.5vw;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.calender-select:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+#schedule {
+  width: 90%;
+  max-width: 1200px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 2vh;
 }
 
 .slot {
-  width: 20vw;
-  height: 25vh;
-  background-color: rgba(15, 23, 42, 0.85);
-  border: 1px solid #334155;
-  border-radius: 0.8rem;
-  text-align: center;
-  line-height: 1.6;
-  cursor: pointer;
-  position: relative;
-  user-select: none;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  padding: 1.5vh;
-  box-sizing: border-box;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(5px);
+  background-color: var(--card-background);
+  border-radius: 1rem;
+  padding: 2vh;
+  height: 6rem;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-.slot:hover {
-  background-color: rgba(30, 41, 59, 0.9);
-  transform: translateY(-5px);
-  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
-}
-
-.slot.selected {
-  outline: none;
-  border: 2px solid #60a5fa;
-  background-color: #092b63;
-  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.3);
-}
-
-.slot.reserved {
-  background-color: rgba(220, 38, 38, 0.8); /* Brighter red for reserved slots */
-  border-color: #ef4444;
-  cursor: not-allowed;
-  color: #ffffff;
+  justify-content: space-between;
+  position: relative;
   overflow: hidden;
+  transition: all 0.4s ease;
+  border: 1px solid transparent;
+  box-shadow: 
+    0 10px 25px rgba(0, 0, 0, 0.1),
+    0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
-/* Time display for reserved slots */
-.slot.reserved:before {
-  content: attr(data-time);
-  display: block;
-  font-size: 2vh;
-  font-weight: 600;
-  margin-bottom: 1vh;
-  color: #ffffff;
-}
-
-.slot.reserved:after {
-  content: "Reserved";
-  display: block;
-  font-size: 1.6vh;
-  font-weight: 500;
-  margin-top: 1vh;
-  color: rgba(255, 255, 255, 0.9);
-}
-
-.slot .info {
+.slot::before {
+  content: '';
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: 100%;
-  background-color: rgba(15, 23, 42, 0.85);
-  border-radius: 0.8rem;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  font-size: 1.2vh;
-  padding: 1vh;
-  box-sizing: border-box;
-  color: #f8fafc;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.slot:hover .info {
-  opacity: 1;
-}
-
-/* Calendar input styling */
-.calender-select {
-  background-color: #1e293b;
-  color: #f8fafc;
-  border: 1px solid #475569;
-  border-radius: 0.6rem;
-  padding: 1.2vh 1.5vw;
-  font-size: 1.6vh;
-  cursor: pointer;
-  margin: 1.5vh 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
   transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  font-family: inherit;
-  max-width: 100%;
 }
 
-.calender-select:hover {
-  border-color: #60a5fa;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.calender-select:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-}
-
-/* Overriding browser default calendar styling */
-input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  opacity: 0.7;
+.slot:hover {
   cursor: pointer;
+  transform: translateY(-10px);
+  border-color: rgba(96, 165, 250, 0.2);
+  box-shadow: 
+    0 15px 35px rgba(0, 0, 0, 0.15),
+    0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-input[type="date"]::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
+.slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1vh;
+}
+
+.slot-time {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.slot-status {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5vh 1vw;
+  border-radius: 0.5rem;
+}
+
+.slot-status.free {
+  background-color: rgba(74, 222, 128, 0.1);
+  color: #4ade80;
+}
+
+.slot-status.reserved {
+  background-color: rgba(244, 63, 94, 0.1);
+  color: #f43f5e;
+}
+
+.slot-status.pending {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+/* Add this to your existing style.css file */
+.slot.selected {
+  border: 2px solid var(--primary-color);
+  background-color: rgba(53, 204, 91, 0.1);
+  transform: scale(1.05);
+  box-shadow: 
+    0 15px 35px rgba(96, 165, 250, 0.2),
+    0 5px 15px rgba(96, 165, 250, 0.15);
+}
+
+.slot.selected .slot-header .slot-time {
+  color: var(--primary-color);
+  font-weight: bold;
+}
+
+.slot-details {
+  margin-top: 1vh;
+}
+
+.slot-reason {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+  max-height: 6vh;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slot-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1vh;
+}
+
+.slot-email {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo {
+  width: 10vw;  /* Adjust size as needed */
+  height: 10vh; /* Adjust size as needed */
+  object-fit: contain;
+}
+
+#reserveBtn {
+  position: fixed;
+  bottom: 3vh;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: white;
+  border: none;
+  padding: 1.5vh 2.5vw;
+  border-radius: 2rem;
+  box-shadow: 0 10px 25px rgba(96, 165, 250, 0.3);
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+#reserveBtn:hover {
+  transform: translate(-50%, -5px);
+  box-shadow: 0 15px 30px rgba(96, 165, 250, 0.4);
 }
 
 /* Modal styling */
@@ -271,7 +329,7 @@ textarea {
 /* Responsive styles */
 @media (max-width: 1200px) {
   #schedule {
-    width: 92%;
+    width: 75%;
     gap: 1.2vh;
   }
 
@@ -284,6 +342,14 @@ textarea {
     width: 85%;
     max-width: 75vw;
   }
+  #reserveBtn {
+    position: relative;
+    bottom: 2vh;
+    right: 2vh;
+    padding: 1.2vh 2vw;
+    font-size: 0.9rem;
+    margin-top: 5vh;
+  }
 }
 
 @media (max-width: 768px) {
@@ -291,24 +357,19 @@ textarea {
     background-size: 50vw auto;
     background-position: center center;
   }
-
   #schedule {
-    width: 95%;
-    gap: 1vh;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5vh;
+  }
+
+  .page-title {
+    font-size: 2rem;
   }
 
   .slot {
-    width: 30vw;
+    padding: 1.5vh;
+    width: 25vw;
     height: 16vh;
-    padding: 1vh;
-  }
-
-  .slot.reserved:before {
-    font-size: 1.8vh;
-  }
-
-  .slot.reserved:after {
-    font-size: 1.4vh;
   }
 
   .modal-content {
@@ -317,10 +378,13 @@ textarea {
     padding: 3vh;
   }
 
-  button {
-    padding: 1vh 2vw;
-    font-size: 1.5vh;
-    border-radius: 0.5rem;
+  #reserveBtn {
+    position: relative;
+    bottom: 2vh;
+    right: 2vh;
+    padding: 1.2vh 2vw;
+    font-size: 0.9rem;
+    margin-top: 5vh;
   }
   
   .calender-select {
@@ -335,49 +399,28 @@ textarea {
     background-position: center center;
   }
 
-  h1 {
-    font-size: 1.5rem;
+  .page-header {
+    flex-direction: column;
+    align-items: center;
   }
 
-  #schedule {
-    width: 98%;
-    gap: 0.8vh;
+  .date-selector {
+    margin-top: 1vh;
   }
 
-  .slot {
-    width: 40vw;
-    height: 14vh;
-    padding: 0.8vh;
-    border-radius: 0.6rem;
+  #reserveBtn {
+    position: relative;
+    bottom: 2vh;
+    right: 2vh;
+    padding: 1.2vh 2vw;
+    font-size: 0.9rem;
+    margin-top: 5vh;
   }
 
-  .slot.reserved:before {
-    font-size: 1.6vh;
-    margin-bottom: 0.5vh;
-  }
-
-  .slot.reserved:after {
-    font-size: 1.2vh;
-    margin-top: 0.5vh;
-  }
-
-  .modal-content {
-    width: 95%;
-    max-width: 95vw;
-    margin: 5vh auto;
-    padding: 2.5vh;
-  }
-
-  button {
-    padding: 1vh 3vw;
-    font-size: 1.4vh;
-    width: 100%;
-    margin: 0.8vh 0;
-  }
-  
-  .calender-select {
-    padding: 0.8vh 2.5vw;
-    font-size: 1.4vh;
-    width: 90%;
+  .slot{
+    width: 60vw;
+    height: 16vh;
+    margin-left: auto;
+    margin-right: auto;
   }
 }

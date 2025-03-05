@@ -1,33 +1,76 @@
 // Function to mark reserved slots based on fetched reservation data
 const markReservedSlots = (reservations) => {
+  const scheduleDiv = document.getElementById("schedule");
+  scheduleDiv.innerHTML = ""; // Clear existing slots
+
   reservations.forEach((reservation) => {
-    const slot = document.querySelector(`.slot[data-time="${reservation.time}"]`);
-    if (slot) {
-      if (reservation.state === "r") {
-        // Reserved
-        slot.classList.add("reserved");
-        slot.classList.remove("pending");
-        const infoDiv = document.createElement("div");
-        infoDiv.classList.add("info");
-        infoDiv.innerHTML = `<strong>Reserved by:</strong><br>${reservation.email}<br><strong>Reason:</strong><br>${reservation.reason}`;
-        slot.innerHTML = "";
-        slot.appendChild(infoDiv);
-      } else if (reservation.state === "p") {
-        // Pending
-        slot.classList.add("pending");
-        slot.classList.remove("reserved");
-        const infoDiv = document.createElement("div");
-        infoDiv.classList.add("info");
-        infoDiv.innerHTML = `<strong>Pending approval</strong><br>${reservation.email}<br><strong>Reason:</strong><br>${reservation.reason}`;
-        slot.innerHTML = "";
-        slot.appendChild(infoDiv);
-      } else {
-        // Free
-        slot.classList.remove("reserved");
-        slot.classList.remove("pending");
-        slot.innerHTML = reservation.time;
-      }
+    const slot = document.createElement("div");
+    slot.classList.add("slot");
+    slot.dataset.time = reservation.time;
+
+    // Slot Header
+    const slotHeader = document.createElement("div");
+    slotHeader.classList.add("slot-header");
+    
+    const timeElement = document.createElement("div");
+    timeElement.classList.add("slot-time");
+    timeElement.textContent = reservation.time;
+    
+    const statusElement = document.createElement("div");
+    statusElement.classList.add("slot-status");
+    
+    // Determine slot status
+    if (reservation.state === "r") {
+      statusElement.textContent = "Reserved";
+      statusElement.classList.add("reserved");
+      slot.classList.add("reserved");
+    } else if (reservation.state === "p") {
+      statusElement.textContent = "Pending";
+      statusElement.classList.add("pending");
+      slot.classList.add("pending");
+    } else {
+      statusElement.textContent = "Available";
+      statusElement.classList.add("free");
     }
+    
+    slotHeader.appendChild(timeElement);
+    slotHeader.appendChild(statusElement);
+    slot.appendChild(slotHeader);
+
+    // Slot Details
+    if (reservation.reason) {
+      const detailsDiv = document.createElement("div");
+      detailsDiv.classList.add("slot-details");
+      
+      const reasonElement = document.createElement("div");
+      reasonElement.classList.add("slot-reason");
+      reasonElement.textContent = reservation.reason;
+      detailsDiv.appendChild(reasonElement);
+      
+      slot.appendChild(detailsDiv);
+    }
+
+    // Slot Footer
+    if (reservation.email) {
+      const footerDiv = document.createElement("div");
+      footerDiv.classList.add("slot-footer");
+      
+      const emailElement = document.createElement("div");
+      emailElement.classList.add("slot-email");
+      emailElement.textContent = reservation.email;
+      
+      footerDiv.appendChild(emailElement);
+      slot.appendChild(footerDiv);
+    }
+
+    // Slot Selection Logic
+    if (!slot.classList.contains("reserved") && !slot.classList.contains("pending")) {
+      slot.addEventListener("click", () => {
+        slot.classList.toggle("selected");
+      });
+    }
+
+    scheduleDiv.appendChild(slot);
   });
 };
 

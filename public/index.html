@@ -7,8 +7,16 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1>Meeting Room Reservation</h1>
-  <input class="calender-select" type="date" id="dateInput">
+  <div class="page-header">
+    <div class="logo-container">
+      <img src="logo.png" alt="Company Logo" class="logo">
+      <h1 class="page-title">Meeting Room Reservation</h1>
+    </div>
+    <div class="date-selector">
+      <input class="calender-select" type="date" id="dateInput">
+    </div>
+  </div>
+
   <div id="schedule"></div>
 
   <!-- Modal for reservation form -->
@@ -21,12 +29,15 @@
         <label for="reason">Reason:</label>
         <textarea id="reason" rows="5" required></textarea>
         <input type="hidden" id="hiddenDate" name="date">
+        <input type="hidden" id="hiddenSlot" name="slot">
         <button type="submit">Reserve</button>
       </form>
     </div>
   </div>
 
-  <button id="reserveBtn">Reserve Selected Slots</button>
+  <div class="reserve-container">
+    <button id="reserveBtn">Reserve Slots</button>
+  </div>
 
   <script src="main.js"></script>
 </body>
