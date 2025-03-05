@@ -186,8 +186,8 @@ app.post("/api/reserve", async (req, res) => {
         transporter.sendMail({
           from: "reservation@measuresofteg.com",
           to: email,
-          subject: "Meeting Room Reservation Pending Approval",
-          text: `Your reservation request for: ${slots.join(", ")} on ${date} is pending administrative approval.\nReason: ${reason}\n\nYou will receive another email once your reservation has been reviewed.`,
+          subject: "Reservation of Meeting Room - Awaiting HR Approval",
+          text: `Dear Requester,\n\nThank you for reserving the meeting room, your request for:\n\n${slots.join(", ")} on ${date}\nReason: ${reason}\n\nhas been received, and we kindly ask you to wait until the approval is confirmed by the HR department.\n\nShould you have any urgent concerns or require further assistance, please feel free to reach out.\n\nThank you for your understanding and cooperation.`,
         }, (error, info) => {
           if (error) {
             console.error('Email send error:', error);
@@ -223,13 +223,6 @@ app.post("/api/reserve", async (req, res) => {
       console.error('Failed to send email:', emailError);
       // Optionally, you can still return a successful reservation response
     }
-    // Notify admin by email about the pending reservation
-    transporter.sendMail({
-      from: "reservation@measuresofteg.com",
-      to: "hr@measuresofteg.com", 
-      subject: "New Pending Meeting Room Reservation",
-      text: `A new reservation request requires your approval:\n\nUser: ${email}\nDate: ${date}\nSlots: ${slots.join(", ")}\nReason: ${reason}\n\nPlease log in to the admin panel to approve or reject this request.`,
-    });
 
     res.json({ success: true, message: "Reservation request submitted and pending approval" });
   } catch (error) {
