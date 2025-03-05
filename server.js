@@ -192,7 +192,7 @@ app.post("/api/reserve", async (req, res) => {
     // Notify admin by email about the pending reservation
     transporter.sendMail({
       from: "reservation@measuresofteg.com",
-      to: "admin@measuresofteg.com", // Replace with actual admin email
+      to: "hr@measuresofteg.com", 
       subject: "New Pending Meeting Room Reservation",
       text: `A new reservation request requires your approval:\n\nUser: ${email}\nDate: ${date}\nSlots: ${slots.join(", ")}\nReason: ${reason}\n\nPlease log in to the admin panel to approve or reject this request.`,
     });
@@ -204,7 +204,7 @@ app.post("/api/reserve", async (req, res) => {
 });
 
 // New endpoint for admin to approve a reservation
-app.post("/api/admin/approve-reservation", adminAuthMiddleware, async (req, res) => {
+app.post("/api/admin/approve-reservation", async (req, res) => {
   const { date, time, email } = req.body;
 
   try {
@@ -240,7 +240,7 @@ app.post("/api/admin/approve-reservation", adminAuthMiddleware, async (req, res)
 });
 
 // New endpoint for admin to reject a reservation
-app.post("/api/admin/reject-reservation", adminAuthMiddleware, async (req, res) => {
+app.post("/api/admin/reject-reservation", async (req, res) => {
   const { date, time, email, rejectionReason } = req.body;
 
   try {
