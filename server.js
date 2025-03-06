@@ -142,17 +142,8 @@ app.get("/api/reservations", async (req, res) => {
   }
 });
 
-// Get pending reservations for admin
-app.get("/api/pending-reservations", adminAuthMiddleware, async (req, res) => {
-  try {
-    const result = await db.execute("SELECT * FROM reservations WHERE state = 'p' ORDER BY date, time");
-    res.json({ reservations: result.rows });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching pending reservations" });
-  }
-});
 
-// Make a reservation - now sets state to pending ("p") instead of reserved ("r")
+// Make a reservation - now sets state to pending ("p")
 app.post("/api/reserve", async (req, res) => {
   const { email, reason, slots, date } = req.body;
 
@@ -227,6 +218,93 @@ app.post("/api/reserve", async (req, res) => {
     res.json({ success: true, message: "Reservation request submitted and pending approval" });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error processing reservation" });
+  }
+});
+
+// Add these endpoints to the server.js file
+
+// Get pending reservations
+app.get("/api/pending-reservations", adminAuthMiddleware, async (req, res) => {
+  try {
+    const result = await db.execute("SELECT * FROM reservations WHERE state = 'p' ORDER BY date, time");
+    res.json({ reservations: result.rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching pending reservations" });
+  }
+});
+
+// Get reserved reservations
+app.get("/api/reserved-reservations", adminAuthMiddleware, async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const result = await db.execute("SELECT * FROM reservations WHERE state = 'r' AND date >= ? ORDER BY date, time", [today]);
+    res.json({ reservations: result.rows });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching reserved reservations" });
+  }
+});
+
+// Fix the cancel-reservation endpoint to include the email parameter correctly
+app.post("/api/admin/cancel-reservation", adminAuthMiddleware, async (req, res) => {
+  const { date, time, email, rejectionReason } = req.body;
+
+  try {
+    // Get the email from the reservation if not provided in the request
+    let userEmail = email;
+    if (!userEmail) {
+      const reservation = await db.execute(
+        "SELECT email FROM reservations WHERE date = ? AND time = ?",
+        [date, time]
+      );
+      if (reservation.rows.length > 0) {
+        userEmail = reservation.rows[0].email;
+      }
+    }
+
+    // Update the reservation status back to "f" (free)
+    await db.execute(
+      "UPDATE reservations SET state = 'f', email = '', reason = '' WHERE date = ? AND time = ?",
+      [date, time]
+    );
+
+    // Send cancellation email to the user if we have an email
+    if (userEmail) {
+      let transporter = nodemailer.createTransport({
+        host: "mail.measuresofteg.com",
+        port: 465,
+        secure: true,
+        auth: {
+          user: "reservation@measuresofteg.com",
+          pass: "Rre$erv@t!0nmos",
+        },
+      });
+      try {
+        await new Promise((resolve, reject) => {
+          transporter.sendMail({
+            from: "reservation@measuresofteg.com",
+            to: userEmail,
+            subject: "Meeting Room Reservation Cancelled",
+            text: `Your reservation for ${time} on ${date} has been cancelled.\nReason: ${rejectionReason || 'No reason provided.'}`
+          }, (error, info) => {
+            if (error) {
+              console.error('Email send error:', error);
+              reject(error);
+            } else {
+              console.log('Email sent:', info.response);
+              resolve(info);
+            }
+          });
+        });
+      } catch (emailError) {
+        console.error('Failed to send email:', emailError);
+        // We still continue with successful response
+      }
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error cancelling reservation:", error);
+    res.status(500).json({ success: false, message: "Error cancelling reservation" });
   }
 });
 
@@ -330,6 +408,7 @@ app.post("/api/admin/reject-reservation", async (req, res) => {
     res.status(500).json({ success: false, message: "Error rejecting reservation" });
   }
 });
+
 
 app.get("/api/reset-reservations", async (req, res) => {
   try {

@@ -26,7 +26,7 @@
     h1 {
       margin: 0;
     }
-    .pending-reservations {
+    .reservations-section {
       margin-top: 2rem;
     }
     .reservation-card {
@@ -58,6 +58,14 @@
     }
     .reject-btn {
       background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    .cancel-btn {
+      background-color: #ff9800;
       color: white;
       border: none;
       padding: 0.5rem 1rem;
@@ -102,6 +110,29 @@
       border-radius: 5px;
       box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }
+    .tabs {
+      display: flex;
+      margin-bottom: 1rem;
+    }
+    .tab {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      background-color: #ddd;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      border-radius: 5px 5px 0 0;
+      margin-right: 0.5rem;
+    }
+    .tab.active {
+      background-color: #fff;
+      border-bottom: 1px solid #fff;
+      position: relative;
+      z-index: 1;
+    }
+    .tab-content {
+      border-top: 1px solid #ccc;
+      padding-top: 1rem;
+    }
   </style>
 </head>
 <body>
@@ -110,9 +141,21 @@
   </header>
 
   <div class="container">
-    <div class="pending-reservations">
-      <h2>Pending Reservations</h2>
-      <div id="pendingList"></div>
+    <div class="tabs">
+      <div class="tab active" data-tab="pending">Pending Reservations</div>
+      <div class="tab" data-tab="reserved">Reserved Slots</div>
+    </div>
+    
+    <div class="tab-content">
+      <div class="reservations-section" id="pendingReservations">
+        <h2>Pending Reservations</h2>
+        <div id="pendingList"></div>
+      </div>
+      
+      <div class="reservations-section" id="reservedReservations" style="display: none;">
+        <h2>Reserved Slots</h2>
+        <div id="reservedList"></div>
+      </div>
     </div>
   </div>
 
@@ -138,9 +181,56 @@
     </div>
   </div>
 
+  <!-- Cancellation Modal -->
+  <div id="cancellationModal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <h3>Provide Cancellation Reason</h3>
+      <form id="cancellationForm">
+        <input type="hidden" id="cancellationDate">
+        <input type="hidden" id="cancellationTime">
+        <input type="hidden" id="cancellationEmail">
+        
+        <div>
+          <label for="cancellationReason">Reason for cancellation:</label>
+          <textarea id="cancellationReason" rows="4" style="width: 100%; margin-top: 0.5rem;" required></textarea>
+        </div>
+        
+        <div style="margin-top: 1rem; text-align: right;">
+          <button type="submit" class="cancel-btn">Confirm Cancellation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
-    // Fetch pending reservations on page load
-    window.addEventListener('load', fetchPendingReservations);
+    // Fetch reservations on page load
+    window.addEventListener('load', () => {
+      fetchPendingReservations();
+      fetchReservedReservations();
+    });
+
+    // Tab functionality
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remove active class from all tabs
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        // Add active class to clicked tab
+        tab.classList.add('active');
+        
+        // Hide all tab content
+        document.getElementById('pendingReservations').style.display = 'none';
+        document.getElementById('reservedReservations').style.display = 'none';
+        
+        // Show active tab content
+        const tabName = tab.getAttribute('data-tab');
+        if (tabName === 'pending') {
+          document.getElementById('pendingReservations').style.display = 'block';
+        } else if (tabName === 'reserved') {
+          document.getElementById('reservedReservations').style.display = 'block';
+        }
+      });
+    });
 
     async function fetchPendingReservations() {
       try {
@@ -213,6 +303,73 @@
       }
     }
 
+    async function fetchReservedReservations() {
+      try {
+        const response = await fetch('/api/reserved-reservations');
+        const data = await response.json();
+        
+        const reservedList = document.getElementById('reservedList');
+        
+        if (data.reservations.length === 0) {
+          reservedList.innerHTML = '<div class="no-reservations">No reserved slots.</div>';
+          return;
+        }
+        
+        // Group reservations by email and date
+        const groupedReservations = {};
+        
+        data.reservations.forEach(reservation => {
+          const key = `${reservation.email}-${reservation.date}`;
+          if (!groupedReservations[key]) {
+            groupedReservations[key] = {
+              email: reservation.email,
+              date: reservation.date,
+              reason: reservation.reason,
+              slots: []
+            };
+          }
+          
+          groupedReservations[key].slots.push({
+            time: reservation.time,
+            date: reservation.date
+          });
+        });
+        
+        let html = '';
+        
+        // Create cards for each grouped reservation
+        Object.values(groupedReservations).forEach(group => {
+          html += `
+            <div class="reservation-card">
+              <h3>Reservation for ${group.date}</h3>
+              <div class="reservation-details">
+                <p><strong>Email:</strong> ${group.email}</p>
+                <p><strong>Reason:</strong> ${group.reason}</p>
+                <p><strong>Reserved Times:</strong></p>
+                <ul>
+                  ${group.slots.map(slot => `
+                    <li>
+                      ${slot.time}
+                      <div class="reservation-actions">
+                        <button class="cancel-btn" 
+                          onclick="showCancellationModal('${slot.date}', '${slot.time}', '${group.email}')">
+                          Cancel
+                        </button>
+                      </div>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            </div>
+          `;
+        });
+        
+        reservedList.innerHTML = html;
+      } catch (error) {
+        console.error('Error fetching reserved reservations:', error);
+      }
+    }
+
     // Function to approve a reservation
     async function approveReservation(date, time, email) {
       try {
@@ -228,7 +385,8 @@
         
         if (data.success) {
           alert(`Reservation for ${time} on ${date} has been approved.`);
-          fetchPendingReservations(); // Refresh the list
+          fetchPendingReservations();
+          fetchReservedReservations();
         } else {
           alert('Error approving reservation. Please try again.');
         }
@@ -248,17 +406,32 @@
       modal.style.display = 'block';
     }
 
-    // Close modal when clicking the X
-    document.querySelector('.modal .close').addEventListener('click', () => {
-      document.getElementById('rejectionModal').style.display = 'none';
+    // Show cancellation modal
+    function showCancellationModal(date, time, email) {
+      const modal = document.getElementById('cancellationModal');
+      document.getElementById('cancellationDate').value = date;
+      document.getElementById('cancellationTime').value = time;
+      document.getElementById('cancellationEmail').value = email;
+      
+      modal.style.display = 'block';
+    }
+
+    // Close modals when clicking the X
+    document.querySelectorAll('.modal .close').forEach(close => {
+      close.addEventListener('click', () => {
+        document.querySelectorAll('.modal').forEach(modal => {
+          modal.style.display = 'none';
+        });
+      });
     });
 
-    // Close modal when clicking outside
+    // Close modals when clicking outside
     window.addEventListener('click', (event) => {
-      const modal = document.getElementById('rejectionModal');
-      if (event.target === modal) {
-        modal.style.display = 'none';
-      }
+      document.querySelectorAll('.modal').forEach(modal => {
+        if (event.target === modal) {
+          modal.style.display = 'none';
+        }
+      });
     });
 
     // Handle rejection form submission
@@ -285,13 +458,52 @@
           alert(`Reservation for ${time} on ${date} has been rejected.`);
           document.getElementById('rejectionModal').style.display = 'none';
           document.getElementById('rejectionForm').reset();
-          fetchPendingReservations(); // Refresh the list
+          fetchPendingReservations();
         } else {
           alert('Error rejecting reservation. Please try again.');
         }
       } catch (error) {
         console.error('Error rejecting reservation:', error);
         alert('Error rejecting reservation: ' + error.message);
+      }
+    });
+
+    // Handle cancellation form submission
+    document.getElementById('cancellationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const date = document.getElementById('cancellationDate').value;
+      const time = document.getElementById('cancellationTime').value;
+      const email = document.getElementById('cancellationEmail').value;
+      const cancellationReason = document.getElementById('cancellationReason').value;
+      
+      try {
+        const response = await fetch('/api/admin/cancel-reservation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            date, 
+            time, 
+            email, 
+            rejectionReason: cancellationReason // Using the same parameter name as expected by server
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          alert(`Reservation for ${time} on ${date} has been cancelled.`);
+          document.getElementById('cancellationModal').style.display = 'none';
+          document.getElementById('cancellationForm').reset();
+          fetchReservedReservations();
+        } else {
+          alert('Error cancelling reservation. Please try again.');
+        }
+      } catch (error) {
+        console.error('Error cancelling reservation:', error);
+        alert('Error cancelling reservation: ' + error.message);
       }
     });
   </script>
