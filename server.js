@@ -422,9 +422,7 @@ app.get("/api/reset-reservations", async (req, res) => {
 
     for (let i = 0; i < 7; i++) {
       const nextDate = new Date(today);
-      nextDate.setDate(today.getDate() + i);
-      const dateString = nextDate.toISOString().split('T')[0];
-
+      
       times.forEach((time) => {
         newReservations.push({
           time,
@@ -434,6 +432,9 @@ app.get("/api/reset-reservations", async (req, res) => {
           reason: "",
         });
       });
+      
+      nextDate.setDate(today.getDate() + i);
+      const dateString = nextDate.toISOString().split('T')[0];
     }
 
     await writeReservations(newReservations);
