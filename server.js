@@ -477,10 +477,6 @@ app.get("/api/reset-reservations", async (req, res) => {
   }
 });
 
-// Helper function to check if a year is a leap year
-function isLeapYear(year) {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}
 
 
 // Start server
