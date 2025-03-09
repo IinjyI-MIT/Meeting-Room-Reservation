@@ -409,20 +409,20 @@ app.post("/api/admin/reject-reservation", async (req, res) => {
   }
 });
 
-
-app.get("/api/reset-reservations", async (req, res) => {
+app.get("/api/set-reservations-till-year-end", async (req, res) => {
   try {
-    console.log("Resetting reservations.");
+    console.log("Setting reservations from today till December 31st.");
     const reservations = await readReservations();
     const newReservations = [];
 
-    // Get the current date and calculate the next week's dates
+    // Get the current date and calculate the dates till January 1st of the next year
     const today = new Date();
+    const endOfYear = new Date(today.getFullYear() + 1, 0, 1); // January 1st of the next year
     const times = Array.from({ length: 9 }, (_, i) => `${9 + i}:00`).map(convertTo12HourFormat);
 
-    for (let i = 0; i < 7; i++) {
-      const nextDate = new Date(today);
-      
+    for (let date = new Date(today); date < endOfYear; date.setDate(date.getDate() + 1)) {
+      const dateString = date.toISOString().split('T')[0];
+
       times.forEach((time) => {
         newReservations.push({
           time,
@@ -432,9 +432,41 @@ app.get("/api/reset-reservations", async (req, res) => {
           reason: "",
         });
       });
-      
-      nextDate.setDate(today.getDate() + i);
-      const dateString = nextDate.toISOString().split('T')[0];
+    }
+
+    await writeReservations(newReservations);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error setting reservations till year end:", error);
+    res.status(500).json({ success: false, message: "Error setting reservations till year end" });
+  }
+});
+
+
+app.get("/api/reset-reservations", async (req, res) => {
+  try {
+    console.log("Resetting reservations.");
+    const reservations = await readReservations();
+    const newReservations = [];
+
+    // Calculate the next year's start date (January 1st) and end date (December 31st)
+    const today = new Date();
+    const nextYearStart = new Date(today.getFullYear() + 1, 0, 1); // January 1st of the next year
+    const nextYearEnd = new Date(today.getFullYear() + 1, 11, 31); // December 31st of the next year
+    const times = Array.from({ length: 9 }, (_, i) => `${9 + i}:00`).map(convertTo12HourFormat);
+
+    for (let date = new Date(nextYearStart); date <= nextYearEnd; date.setDate(date.getDate() + 1)) {
+      const dateString = date.toISOString().split('T')[0];
+
+      times.forEach((time) => {
+        newReservations.push({
+          time,
+          date: dateString,
+          state: "f",
+          email: "",
+          reason: "",
+        });
+      });
     }
 
     await writeReservations(newReservations);
@@ -444,6 +476,12 @@ app.get("/api/reset-reservations", async (req, res) => {
     res.status(500).json({ success: false, message: "Error resetting reservations" });
   }
 });
+
+// Helper function to check if a year is a leap year
+function isLeapYear(year) {
+  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
+}
+
 
 // Start server
 const PORT = process.env.PORT || 3000;
